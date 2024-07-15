@@ -10,10 +10,9 @@ const oldPointStructure = {
   5: ["K"],
   8: ["J", "X"],
   10: ["Q", "Z"]
-  // 0 : [' ']
 };
 
-const alphabets = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+const alphabets = "ABCDEFGHIJKLMNOPQRSTUVWXYZ "; // to validate the input
 
 const vowels = ["A", "E", "I", "O", "U"];
 
@@ -22,9 +21,9 @@ let newPointStructure = transform(oldPointStructure);
 function transform(oldPoint) {
   let newPoints = {};
   for (item in oldPoint) {
-    let v = oldPoint[item];
+    let v = oldPoint[item]; 
     for (let j = 0; j < v.length; j++) {
-      let key = oldPoint[item][j].toLowerCase();
+      let key = oldPoint[item][j].toLowerCase(); // 
       let val = item;
       newPoints[key] = Number(val);
     }
@@ -32,18 +31,24 @@ function transform(oldPoint) {
   return newPoints;
 }
 
+// Prompting user for an input until valid input is provided
 function initialPrompt() {
   console.log("Let's play some scrabble!");
-  inputWord = input.question("\nEnter a word to score: ");
-  inputWord = String(inputWord.toUpperCase());
-  for (let i = 0; i < inputWord.length; i++) {
-    while (!alphabets.includes(inputWord[i])) {
+  do {
+    inputWord = input.question("\nEnter a word to score: ");
+  } while (!isInputValid(inputWord));
+  return inputWord;
+}
+
+// Validates against a list of alphabets 
+function isInputValid(word) {
+  for (let i = 0; i < word.length; i++) {
+    if (!alphabets.includes(word[i].toUpperCase())) {
       console.log("Please do not enter numbers or symbols");
-      inputWord = input.question("\nEnter a word to score: ");
-      inputWord = String(inputWord.toUpperCase());
+      return false;
     }
-    return inputWord;
   }
+  return true;
 }
 
 function oldScrabbleScorer(word) {
@@ -59,28 +64,36 @@ function oldScrabbleScorer(word) {
   return letterPoints;
 }
 
+// Remove spaces anywhere in the given word
+function removeSpaces(word) {
+  return word.split(' ').join('');
+}
+
+// new scrabbleScorer function using new Point Structure - scores each letter using old scoring method
 function scrabbleScorer(word) {
-  word = String(word).toLowerCase();
+  word = String(word);
   let letterPoints = 0;
 
   for (let i = 0; i < word.length; i++) {
-    let currentChar = word[i];
+    let currentChar = word[i].toLowerCase();
     let currentScore = newPointStructure[currentChar];
     letterPoints += currentScore;
   }
   return letterPoints;
 }
 
+// Score the word based on its length, excluding spaces
 function simpleScorer(word) {
   let simpleScore = String(word).length;
   return simpleScore;
 }
 
+// Score the word based on its length, excluding spaces however provides more weightage for vowel
 function vowelBonusScorer(word) {
-  word = String(word).toUpperCase();
+  word = String(word);
   let letterPoints = 0;
   for (let i = 0; i < word.length; i++) {
-    let currentLetter = word[i];
+    let currentLetter = word[i].toUpperCase();
     if (vowels.includes(currentLetter)) {
       letterPoints += 3;
     } else {
@@ -111,10 +124,16 @@ let scrabbleScorers = {
   scorerFunction: scrabbleScorer
 };
 
+// array that contains the scoring method objects
 const scoringAlgorithms = [simpleScorers, vowelBonusScorers, scrabbleScorers];
 
+// Prompting the user to enter a valid word and prompting them to select the method to score the word
 function scorerPrompt() {
   let inputWord = initialPrompt();
+
+  // removing spaces as the score for spaces is 0
+  let trimmedWord = removeSpaces(inputWord);
+
   console.log(`Which scoring algorithm would you like to use?
 
 0 - Simple: One point per character
@@ -125,12 +144,8 @@ function scorerPrompt() {
     console.log("Please enter a number 0, 1 or 2");
     scoringMethod = input.question("Enter 0, 1 or 2 : ");
   }
-  console.log(
-    "Score for '" +
-      inputWord +
-      "' : " +
-      scoringAlgorithms[scoringMethod].scorerFunction(inputWord)
-  );
+  let scoringFunction = scoringAlgorithms[scoringMethod];
+  console.log(`Score for "${inputWord}" : ${scoringFunction.scorerFunction(trimmedWord)}`);
   return scoringAlgorithms[scoringMethod];
 }
 
